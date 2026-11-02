@@ -16,6 +16,8 @@
 @media print{.brand-row button,.navigation,.result-actions,.footer,.status-options,.stage-note{display:none}.page{width:100%}.card{border:0;padding:0}body{background:white}.result{margin:0}}
 
 .brand-link{display:inline-flex;align-items:center;gap:12px;flex-shrink:0;text-decoration:none;color:var(--blue)}.brand-link>span{font-size:12px;font-weight:700;white-space:nowrap}.brand-link:hover>span{text-decoration:underline}@media(max-width:540px){.brand-link{gap:8px}.brand-link>span{font-size:11px}}
+
+.child-result{margin:0 0 24px;font-size:clamp(15px,1.7vw,18px);font-weight:700;line-height:1.7}.child-result p{margin:0}.recommendation .audience-label{font-size:11px;text-transform:uppercase;letter-spacing:.8px;font-weight:700;color:var(--muted);margin-bottom:12px}.registration-action{margin-top:20px}
 </style>
 </head>
 <body>
@@ -109,11 +111,11 @@ function computeResult(responses){
 }
 
 function getRecommendation(s){
-  if(s.completed!==s.total)return {id:'incomplete',tone:'neutral',title:'Сначала закончи тест',text:'Для общего результата нужно ответить на все 12 вопросов или отметить, что тема ещё не изучалась либо пока не получается.'};
-  if(s.correct>=RECOMMENDATION_RULES.strongScore&&s.conceptCorrect>=RECOMMENDATION_RULES.strongConcepts)return {id:'confident',tone:'green',title:'Сейчас полный тренинг, скорее всего, не требуется',text:'С предложенными заданиями ребёнок справляется уверенно и понимает основные связи между дробями и действиями. Можно продолжать закреплять материал в школе. Если в обычной работе трудности всё же возникают, обсудите их с преподавателем.'};
-  if(s.unknown>=RECOMMENDATION_RULES.newTopicsMin)return {id:'new-topics',tone:'blue',title:'Тренинг может быть полезен для знакомства с темой целиком',text:'Часть тем ребёнок ещё не изучал. Тренинг поможет последовательно познакомиться с дробями и получить практику с преподавателем. При выборе курса учитывайте школьную программу и запрос семьи.'};
-  if(s.correct<=RECOMMENDATION_RULES.courseScoreMax)return {id:'recommended',tone:'blue',title:'Рекомендуем тренинг дробей',text:'В предложенных заданиях есть заметные затруднения. На курсе можно вернуться к основным понятиям, разобраться в правилах и потренироваться с помощью преподавателя. По результатам этой проверки полный курс будет полезен.'};
-  return {id:'useful',tone:'blue',title:'Тренинг может быть полезен для укрепления понимания',text:'С частью заданий ребёнок справляется, а в других пока возникают затруднения. Курс поможет связать правила между собой и поработать с ними в практике. Если похожие трудности встречаются и в школе, рекомендуем пройти тренинг.'};
+  if(s.completed!==s.total)return {id:'incomplete',tone:'neutral',title:'Сначала закончи тест',childText:'',text:'Для общего результата нужно ответить на все 12 вопросов или отметить, что тема ещё не изучалась либо пока не получается.'};
+  if(s.correct>=RECOMMENDATION_RULES.strongScore&&s.conceptCorrect>=RECOMMENDATION_RULES.strongConcepts)return {id:'confident',tone:'green',title:'',childText:'Отличный результат! Ты уверенно справляешься с вычислениями и хорошо знаешь тему «Дроби».',text:'Ребёнок уже уверенно справляется с основными задачами, которым посвящён тренинг. Поэтому проходить тренинг дробей нет необходимости.'};
+  if(s.unknown>=RECOMMENDATION_RULES.newTopicsMin)return {id:'new-topics',tone:'blue',title:'Рекомендуем тренинг дробей.',childText:'Некоторые задания оказались для тебя новыми. Ты уже знаешь, с какими темами познакомишься дальше!',text:'Часть материала ребёнок ещё не изучал. На шести занятиях мы разберём основные понятия и действия с обыкновенными и десятичными дробями, покажем связи между ними и дадим практику. Это поможет ребёнку увидеть тему целиком и подготовиться к дальнейшему изучению в школе.'};
+  if(s.correct<=RECOMMENDATION_RULES.courseScoreMax)return {id:'recommended',tone:'blue',title:'Рекомендуем тренинг дробей.',childText:'Многие задания пока вызвали трудности. С дробями можно разобраться шаг за шагом — начиная с основных понятий.',text:'Диагностика показала затруднения в работе с дробями. На курсе ребёнок вернётся к основным понятиям, разберёт смысл правил и потренируется применять их в заданиях. Преподаватель поможет разобраться с ошибками, а домашние тренажёры дадут дополнительную практику после каждого занятия.'};
+  return {id:'useful',tone:'blue',title:'Рекомендуем тренинг дробей.',childText:'Ты уже справляешься с частью заданий. Продолжай тренироваться, чтобы увереннее работать с дробями!',text:'У ребёнка уже есть основа для работы с дробями. В тесте также встретились задания, которые вызвали затруднения. На тренинге мы повторим основные понятия и правила, разберём их взаимосвязи и уделим время практике. Во время самостоятельной работы преподаватель поможет разобраться с непонятными шагами и исправить ошибки.'};
 }
 
 const REGISTRATION_URL = 'https://forms.yandex.ru/cloud/6ab95df11f1eb501136e0f18/?utm_source=fractions_diagnostic';
@@ -174,7 +176,7 @@ function registrationHTML(recommendation){
 
 function resultHTML(){
   const s=computeResult(state.responses);const rec=s.recommendation;const registration=registrationHTML(rec);
-  return `<section class="card result"><p class="eyebrow">Тест завершён · ${state.grade} класс</p><div class="result-intro"><div><div class="score">${s.correct}<small> / 12</small></div><p class="score-caption">заданий решено верно</p></div><h1>Результат<br>по дробям</h1></div><div class="result-counts"><div class="count"><strong>${s.correct}</strong>Верных ответов</div><div class="count"><strong>${s.unresolved}</strong>Пока не получилось</div><div class="count"><strong>${s.unknown}</strong>Ещё не изучал</div></div><div class="recommendation ${rec.tone}"><h2>${rec.title}</h2><p>${rec.text}</p></div><p class="result-note">Это ориентир по одному прохождению. При выборе курса учитывайте школьный опыт ребёнка и запрос семьи.${s.unknown?' Отметки «Ещё не изучал» учтены отдельно от ошибок.':''}</p><div class="result-actions">${registration}<button type="button" class="button ${registration?'secondary':'primary'}" data-action="download">Скачать результат</button><button type="button" class="button secondary" data-action="reset">Пройти заново</button></div></section>`;
+  return `<section class="card result"><p class="eyebrow">Тест завершён · ${state.grade} класс</p><div class="result-intro"><div><div class="score">${s.correct}<small> / 12</small></div><p class="score-caption">заданий решено верно</p></div><h1>Результат<br>по дробям</h1></div><div class="result-counts"><div class="count"><strong>${s.correct}</strong>Верных ответов</div><div class="count"><strong>${s.unresolved}</strong>Пока не получилось</div><div class="count"><strong>${s.unknown}</strong>Ещё не изучал</div></div><div class="child-result"><p>${E(rec.childText)}</p></div><div class="recommendation ${rec.tone}"><p class="audience-label">Родителю</p>${rec.title?`<h2>${E(rec.title)}</h2>`:''}<p>${E(rec.text)}</p>${registration?`<div class="registration-action">${registration}</div>`:''}</div><div class="result-actions"><button type="button" class="button ${registration?'secondary':'primary'}" data-action="download">Скачать результат</button><button type="button" class="button secondary" data-action="reset">Пройти заново</button></div></section>`;
 }
 
 function render(focus){
@@ -201,7 +203,7 @@ function next(){
 }
 function reportText(){
   const s=computeResult(state.responses);if(!state.completed||s.completed!==12)return '';
-  return ['Сигма — диагностика по дробям',`Класс: ${state.grade}`,`Дата: ${new Date().toLocaleDateString('ru-RU')}`,'',`Верно: ${s.correct} из 12.`,`Пока не получилось: ${s.unresolved}.`,`Ещё не изучал: ${s.unknown}.`,'',s.recommendation.title,s.recommendation.text,'','Результат одного прохождения. При выборе курса учитывайте школьный опыт ребёнка и запрос семьи.'].join('\n');
+  return ['Сигма — диагностика по дробям',`Класс: ${state.grade}`,`Дата: ${new Date().toLocaleDateString('ru-RU')}`,'',`Верно: ${s.correct} из 12.`,`Пока не получилось: ${s.unresolved}.`,`Ещё не изучал: ${s.unknown}.`,'',s.recommendation.childText,'','Родителю',...(s.recommendation.title?[s.recommendation.title]:[]),s.recommendation.text].join('\n');
 }
 
 document.addEventListener('submit',e=>{if(e.target.id==='answer-form'){e.preventDefault();next();}});
