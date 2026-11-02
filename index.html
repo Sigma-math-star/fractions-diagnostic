@@ -116,6 +116,7 @@ function getRecommendation(s){
   return {id:'useful',tone:'blue',title:'Тренинг может быть полезен для укрепления понимания',text:'С частью заданий ребёнок справляется, а в других пока возникают затруднения. Курс поможет связать правила между собой и поработать с ними в практике. Если похожие трудности встречаются и в школе, рекомендуем пройти тренинг.'};
 }
 
+const REGISTRATION_URL = 'https://forms.yandex.ru/cloud/6ab95df11f1eb501136e0f18/?utm_source=fractions_diagnostic';
 const STORAGE_KEY='sigma-fractions-diagnostic-v1';
 const freshState=()=>({version:1,grade:'',index:0,screen:'intro',completed:false,responses:{}});
 let storageAvailable=true;
@@ -166,9 +167,14 @@ function questionHTML(){
   return `<section class="card stage"><div class="stage-top"><span>Вопрос ${state.index+1} из 12</span><span>${state.grade} класс</span></div><div class="progress-track" role="progressbar" aria-label="Ход теста" aria-valuemin="0" aria-valuemax="12" aria-valuenow="${state.index}"><div class="progress-fill" style="width:${state.index/12*100}%"></div></div><p class="question-kicker">${q.title}</p><h2 class="question-title" id="question-prompt">${q.prompt}</h2><form id="answer-form" novalidate>${field}<div class="status-options" aria-label="Можно отметить вместо ответа"><button type="button" class="status-choice" data-status="unknown" aria-pressed="${r.state==='unknown'}">Ещё не изучал</button><button type="button" class="status-choice" data-status="cannot" aria-pressed="${r.state==='cannot'}">Пока не получается</button></div>${validationHTML()}<div class="navigation"><button class="button secondary" type="button" data-action="back" ${state.index===0?'disabled':''}><span aria-hidden="true">←</span> Назад</button><button class="button primary" type="submit">${state.index===11?'Узнать результат':'Дальше'} <span aria-hidden="true">→</span></button></div></form><p class="stage-note">Ответы проверим в конце теста.${storageAvailable?' Можно закрыть страницу и продолжить позже в этом браузере.':' В этом режиме прогресс после закрытия страницы не сохраняется.'}</p></section>`;
 }
 
+function registrationHTML(recommendation){
+  if(!REGISTRATION_URL||!['recommended','useful','new-topics'].includes(recommendation.id))return '';
+  return `<a class="button primary" href="${E(REGISTRATION_URL)}" target="_blank" rel="noopener noreferrer">Записаться на тренинг</a>`;
+}
+
 function resultHTML(){
-  const s=computeResult(state.responses);const rec=s.recommendation;
-  return `<section class="card result"><p class="eyebrow">Тест завершён · ${state.grade} класс</p><div class="result-intro"><div><div class="score">${s.correct}<small> / 12</small></div><p class="score-caption">заданий решено верно</p></div><h1>Результат<br>по дробям</h1></div><div class="result-counts"><div class="count"><strong>${s.correct}</strong>Верных ответов</div><div class="count"><strong>${s.unresolved}</strong>Пока не получилось</div><div class="count"><strong>${s.unknown}</strong>Ещё не изучал</div></div><div class="recommendation ${rec.tone}"><h2>${rec.title}</h2><p>${rec.text}</p></div><p class="result-note">Это ориентир по одному прохождению. При выборе курса учитывайте школьный опыт ребёнка и запрос семьи.${s.unknown?' Отметки «Ещё не изучал» учтены отдельно от ошибок.':''}</p><div class="result-actions"><button type="button" class="button primary" data-action="download">Скачать результат</button><button type="button" class="button secondary" data-action="reset">Пройти заново</button></div></section>`;
+  const s=computeResult(state.responses);const rec=s.recommendation;const registration=registrationHTML(rec);
+  return `<section class="card result"><p class="eyebrow">Тест завершён · ${state.grade} класс</p><div class="result-intro"><div><div class="score">${s.correct}<small> / 12</small></div><p class="score-caption">заданий решено верно</p></div><h1>Результат<br>по дробям</h1></div><div class="result-counts"><div class="count"><strong>${s.correct}</strong>Верных ответов</div><div class="count"><strong>${s.unresolved}</strong>Пока не получилось</div><div class="count"><strong>${s.unknown}</strong>Ещё не изучал</div></div><div class="recommendation ${rec.tone}"><h2>${rec.title}</h2><p>${rec.text}</p></div><p class="result-note">Это ориентир по одному прохождению. При выборе курса учитывайте школьный опыт ребёнка и запрос семьи.${s.unknown?' Отметки «Ещё не изучал» учтены отдельно от ошибок.':''}</p><div class="result-actions">${registration}<button type="button" class="button ${registration?'secondary':'primary'}" data-action="download">Скачать результат</button><button type="button" class="button secondary" data-action="reset">Пройти заново</button></div></section>`;
 }
 
 function render(focus){
